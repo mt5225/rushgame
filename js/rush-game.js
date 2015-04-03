@@ -26,7 +26,7 @@
       }).bind(this));
       lastPlatformX = 50;
       lastPlatformY = 150;
-      for (i = j = 1; j < 10; i = ++j) {
+      for (i = j = 1; j < 100; i = ++j) {
         platform = new window.Platform();
         platform.x = lastPlatformX;
         platform.y = Math.random() * 80 - 40 + lastPlatformY;
