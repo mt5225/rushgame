@@ -29,6 +29,15 @@ window.Hero = do ->
       new createjs.Point(@width/2, @height),
       new createjs.Point(@width, @height/2)
     ]
+
+    #create ticker
+    createjs.Ticker.addEventListener "tick", ((evt)->
+      if !evt.paused
+        @velocity.x = 2
+    ).bind(@)
     return
+
+  p.jump = ->
+    @velocity.y = -10
 
   Hero

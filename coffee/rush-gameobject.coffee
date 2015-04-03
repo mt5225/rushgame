@@ -16,6 +16,7 @@ window.GameObject = do ->
     @category = 'object'
     @width = 0
     @height = 0
+    return
 
   p.hit = (point) ->
     if(point.x >=0 && point.x <= @width && point.y >= 0 && point.y <= @height)

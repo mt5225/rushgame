@@ -11,7 +11,7 @@
       this.Container_initialize();
       this.category = 'object';
       this.width = 0;
-      return this.height = 0;
+      this.height = 0;
     };
     p.hit = function(point) {
       if (point.x >= 0 && point.x <= this.width && point.y >= 0 && point.y <= this.height) {

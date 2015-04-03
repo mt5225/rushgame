@@ -21,7 +21,15 @@
       this.addChild(shape);
       this.regX = this.width / 2;
       this.regY = this.height;
-      this.collisionPoints = [new createjs.Point(this.regX, this.regY)];
+      this.collisionPoints = [new createjs.Point(this.width / 2, this.height), new createjs.Point(this.width, this.height / 2)];
+      createjs.Ticker.addEventListener("tick", (function(evt) {
+        if (!evt.paused) {
+          return this.velocity.x = 2;
+        }
+      }).bind(this));
+    };
+    p.jump = function() {
+      return this.velocity.y = -10;
     };
     return Hero;
   })();

@@ -10,8 +10,8 @@
     p.GameObject_initialize = p.initialize;
     p.initialize = function() {
       var shape;
-      this.width = 40;
-      this.height = 20;
+      this.width = 16;
+      this.height = 12;
       shape = window.CommonShapes.rectangle({
         width: this.width,
         height: this.height,

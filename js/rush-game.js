@@ -6,11 +6,24 @@
       console.log('Rush game starts.');
       this.canvas = document.getElementById('game-canvas');
       this.stage = new createjs.Stage(this.canvas);
+      this.camera = new createjs.Container();
+      this.stage.addChild(this.camera);
+      createjs.Ticker.setFPS(40);
       this.initGame();
     };
     p = RushGame.prototype;
     p.initGame = function() {
       var coin, i, j, lastPlatformX, lastPlatformY, obstacle, platform, platformGap;
+      this.hero = new window.Hero();
+      this.hero.x = 100;
+      this.hero.y = 100;
+      this.collectedCoin = 0;
+      this.camera.addChild(this.hero);
+      this.stage.on("stagemousedown", (function(evt) {
+        if (this.hero.onGroud) {
+          return this.hero.jump();
+        }
+      }).bind(this));
       lastPlatformX = 50;
       lastPlatformY = 150;
       for (i = j = 1; j < 10; i = ++j) {
@@ -18,48 +31,38 @@
         platform.x = lastPlatformX;
         platform.y = Math.random() * 80 - 40 + lastPlatformY;
         platform.y = Math.max(80, Math.min(250, platform.y));
-        platformGap = Math.random() * 32;
+        platformGap = Math.max(Math.random() * 32, 20);
         lastPlatformX += platform.width + platformGap;
         lastPlatformY = platform.y;
-        this.stage.addChild(platform);
+        this.camera.addChild(platform);
         if (Math.random() > 0.5 && i > 1) {
           obstacle = new window.Obstacle();
           obstacle.x = platform.x + platform.width / 2;
           obstacle.y = platform.y;
-          this.stage.addChild(obstacle);
+          this.camera.addChild(obstacle);
         } else {
           coin = new window.Coin();
           coin.x = platform.x + platform.width / 2;
           coin.y = platform.y;
-          this.stage.addChild(coin);
+          this.camera.addChild(coin);
         }
       }
-      this.hero = new window.Hero();
-      this.hero.x = 100;
-      this.hero.y = 100;
-      this.stage.addChild(this.hero);
-      platform = new window.Platform();
-      platform.x = 90;
-      platform.y = 100;
-      this.stage.addChild(platform);
-      obstacle = new window.Obstacle();
-      obstacle.x = 120;
-      obstacle.y = 100;
-      this.stage.addChild(obstacle);
-      coin = new window.Coin();
-      coin.x = 105;
-      coin.y = 100;
-      this.stage.addChild(coin);
-      this.resolveCollision();
-      this.updateView();
+      createjs.Ticker.addEventListener("tick", (function(evt) {
+        if (!evt.paused) {
+          this.updateView();
+          this.resolveCollision();
+          this.moveGameObject();
+          return this.moveCamera();
+        }
+      }).bind(this));
     };
     p.gameObjectHitHero = function(category, hitCallBack) {
       var collisionPoint, gameObject, j, len, point, ref, results;
-      ref = this.stage.children;
+      ref = this.camera.children;
       results = [];
       for (j = 0, len = ref.length; j < len; j++) {
         gameObject = ref[j];
-        if (gameObject.category === category) {
+        if (gameObject && gameObject.category === category) {
           results.push((function() {
             var k, len1, ref1, results1;
             ref1 = this.hero.collisionPoints;
@@ -68,8 +71,7 @@
               collisionPoint = ref1[k];
               point = this.hero.localToLocal(collisionPoint.x, collisionPoint.y, gameObject);
               if (gameObject.hit(point)) {
-                console.log("=====> hero hit by " + category);
-                results1.push(hitCallBack());
+                results1.push(hitCallBack(point, gameObject));
               } else {
                 results1.push(void 0);
               }
@@ -81,12 +83,51 @@
       return results;
     };
     p.resolveCollision = function() {
-      this.gameObjectHitHero('platform', function() {});
-      this.gameObjectHitHero('obstacle', function() {});
-      return this.gameObjectHitHero('coin', function() {});
+      this.hero.onGroud = false;
+      this.gameObjectHitHero('platform', (function(point, platform) {
+        if (this.hero.velocity.y > 0) {
+          this.hero.y = platform.y;
+          this.hero.velocity.y = 0;
+        }
+        return this.hero.onGroud = true;
+      }).bind(this));
+      this.gameObjectHitHero('obstacle', (function(point, gameObject) {
+        return this.gameOver();
+      }).bind(this));
+      return this.gameObjectHitHero('coin', (function(point, coin) {
+        this.camera.removeChild(coin);
+        return this.collectedCoin++;
+      }).bind(this));
+    };
+    p.moveGameObject = function() {
+      var gameObject, j, len, ref;
+      ref = this.camera.children;
+      for (j = 0, len = ref.length; j < len; j++) {
+        gameObject = ref[j];
+        if (!gameObject.velocity) {
+          continue;
+        }
+        gameObject.x += gameObject.velocity.x;
+        gameObject.y += gameObject.velocity.y;
+      }
+      if (this.hero.y > 400) {
+        return this.gameOver();
+      }
+    };
+    p.moveCamera = function() {
+      return this.camera.x -= this.hero.velocity.x;
+    };
+    p.gameOver = function() {
+      this.resetGame();
+      return this.initGame();
+    };
+    p.resetGame = function() {
+      createjs.Ticker.removeAllEventListeners();
+      this.camera.removeAllChildren();
+      return this.camera.x = 0;
     };
     p.updateView = function() {
-      this.stage.update();
+      return this.stage.update();
     };
     return RushGame;
   })();

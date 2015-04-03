@@ -12,8 +12,8 @@ window.Obstacle = do ->
   p.GameObject_initialize = p.initialize
 
   p.initialize = ->
-    @width = 40
-    @height = 20
+    @width = 16
+    @height = 12
     # draw a shape to represent the obstacle.
     shape = window.CommonShapes.rectangle(
       width: @width
