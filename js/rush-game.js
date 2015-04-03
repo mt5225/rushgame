@@ -7,15 +7,83 @@
       this.canvas = document.getElementById('game-canvas');
       this.stage = new createjs.Stage(this.canvas);
       this.initGame();
-      this.updateView();
     };
     p = RushGame.prototype;
     p.initGame = function() {
-      var platform;
+      var coin, i, j, lastPlatformX, lastPlatformY, obstacle, platform, platformGap;
+      lastPlatformX = 50;
+      lastPlatformY = 150;
+      for (i = j = 1; j < 10; i = ++j) {
+        platform = new window.Platform();
+        platform.x = lastPlatformX;
+        platform.y = Math.random() * 80 - 40 + lastPlatformY;
+        platform.y = Math.max(80, Math.min(250, platform.y));
+        platformGap = Math.random() * 32;
+        lastPlatformX += platform.width + platformGap;
+        lastPlatformY = platform.y;
+        this.stage.addChild(platform);
+        if (Math.random() > 0.5 && i > 1) {
+          obstacle = new window.Obstacle();
+          obstacle.x = platform.x + platform.width / 2;
+          obstacle.y = platform.y;
+          this.stage.addChild(obstacle);
+        } else {
+          coin = new window.Coin();
+          coin.x = platform.x + platform.width / 2;
+          coin.y = platform.y;
+          this.stage.addChild(coin);
+        }
+      }
+      this.hero = new window.Hero();
+      this.hero.x = 100;
+      this.hero.y = 100;
+      this.stage.addChild(this.hero);
       platform = new window.Platform();
-      platform.x = 100;
+      platform.x = 90;
       platform.y = 100;
       this.stage.addChild(platform);
+      obstacle = new window.Obstacle();
+      obstacle.x = 120;
+      obstacle.y = 100;
+      this.stage.addChild(obstacle);
+      coin = new window.Coin();
+      coin.x = 105;
+      coin.y = 100;
+      this.stage.addChild(coin);
+      this.resolveCollision();
+      this.updateView();
+    };
+    p.gameObjectHitHero = function(category, hitCallBack) {
+      var collisionPoint, gameObject, j, len, point, ref, results;
+      ref = this.stage.children;
+      results = [];
+      for (j = 0, len = ref.length; j < len; j++) {
+        gameObject = ref[j];
+        if (gameObject.category === category) {
+          results.push((function() {
+            var k, len1, ref1, results1;
+            ref1 = this.hero.collisionPoints;
+            results1 = [];
+            for (k = 0, len1 = ref1.length; k < len1; k++) {
+              collisionPoint = ref1[k];
+              point = this.hero.localToLocal(collisionPoint.x, collisionPoint.y, gameObject);
+              if (gameObject.hit(point)) {
+                console.log("=====> hero hit by " + category);
+                results1.push(hitCallBack());
+              } else {
+                results1.push(void 0);
+              }
+            }
+            return results1;
+          }).call(this));
+        }
+      }
+      return results;
+    };
+    p.resolveCollision = function() {
+      this.gameObjectHitHero('platform', function() {});
+      this.gameObjectHitHero('obstacle', function() {});
+      return this.gameObjectHitHero('coin', function() {});
     };
     p.updateView = function() {
       this.stage.update();
